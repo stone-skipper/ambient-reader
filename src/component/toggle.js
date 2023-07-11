@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Sun, Moon } from "phosphor-react";
 
 export default function Toggle({ left = true, onClick, darkMode = true }) {
-  let iconSize = 20;
+  let iconSize = 18;
   let circleSize = 20;
   let paddingBetwenCircle = 4;
   return (
@@ -16,7 +16,7 @@ export default function Toggle({ left = true, onClick, darkMode = true }) {
       }}
     >
       <Sun
-        color={darkMode === true ? "white" : "black"}
+        color={darkMode === true ? "#999999" : "#111111"}
         weight="bold"
         size={iconSize}
       />
@@ -49,7 +49,7 @@ export default function Toggle({ left = true, onClick, darkMode = true }) {
         ></motion.div>
       </motion.div>
       <Moon
-        color={darkMode === true ? "white" : "black"}
+        color={darkMode === true ? "#999999" : "#111111"}
         weight="bold"
         size={iconSize}
       />

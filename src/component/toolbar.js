@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import Toggle from "./toggle";
 import { useState } from "react";
 import { IBM_Plex_Mono } from "next/font/google";
+import { hexToRgb1, hexToRgb0 } from "../helper/util";
+
 const ibm = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 
 export default function Toolbar({
@@ -10,8 +12,10 @@ export default function Toolbar({
   darkMode = true,
   ambience,
   onAmbienceClick,
+  color,
 }) {
   const [hover, setHover] = useState(false);
+
   return (
     <>
       <div
@@ -25,11 +29,10 @@ export default function Toolbar({
           zIndex: 1,
           display: "flex",
           justifyContent: "center",
-          background: "blue",
-          background:
-            darkMode === true
-              ? "linear-gradient(rgba(35,39,55,1), rgba(35,39,55,1), rgba(35,39,55,0))"
-              : "linear-gradient(rgba(255,255,255,1), rgba(255,255,255,1), rgba(255,255,255,0))",
+
+          background: `linear-gradient(${hexToRgb1(color)}, ${hexToRgb1(
+            color
+          )}, ${hexToRgb0(color)})`,
         }}
       ></div>
       <div
@@ -47,7 +50,7 @@ export default function Toolbar({
           top: 15,
           left: "25%",
           background:
-            darkMode === true ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
+            darkMode === true ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.03)",
         }}
         className={ibm.className}
         onMouseOver={() => {
@@ -67,7 +70,11 @@ export default function Toolbar({
       initial={{ opacity: 0 }}
       animate={{ opacity: hover === true ? 1 : 0 }}
     ></motion.input> */}
-        <motion.p style={{ paddingLeft: 15 }} onClick={onAmbienceClick}>
+        <motion.p
+          style={{ paddingLeft: 15, cursor: "pointer", opacity: 0.4 }}
+          onClick={onAmbienceClick}
+          whileHover={{ opacity: 1 }}
+        >
           ambience {ambience === true ? "on" : "off"}
         </motion.p>
         <Toggle onClick={onClick} left={darkMode} darkMode={darkMode} />

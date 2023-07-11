@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import Toolbar from "../component/toolbar";
 import Contact from "../component/contact";
 import { IBM_Plex_Mono } from "next/font/google";
-import { InstagramLogo, TwitterLogo, Globe } from "phosphor-react";
+import { InstagramLogo, TwitterLogo, Globe, Note } from "phosphor-react";
 
 const ibm = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 
@@ -19,7 +19,6 @@ let iconSize = 14;
 
 const easeInOutCubic = (t: any) =>
   t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-const deg2rad = (degrees: any) => degrees * (Math.PI / 180);
 
 function Sphere({ position = [0, 0, 0], ...props }) {
   const ref = useRef();
@@ -172,7 +171,9 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [darkModeAnim, setDarkModeAnim] = useState(0);
   const [ambience, setAmbience] = useState(false);
-  const [window, setWindow] = useState(false);
+  const [windowShadow, setWindowShadow] = useState(false);
+  const [color, setColor] = useState("#ffffff");
+  const [threeLoading, setThreeLoading] = useState(false);
   // const { enabled, ...config } = useControls({
   //   enabled: true,
   //   size: { value: 25, min: 0, max: 100 },
@@ -183,46 +184,76 @@ export default function Home() {
   const lightAudioRef = useRef(null);
   const nightAudioRef = useRef(null);
 
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setAmbience(true);
+  //   }, 4000);
+  // }, []);
   useEffect(() => {
-    setTimeout(() => {
-      setAmbience(true);
-    }, 4000);
-  }, []);
+    if (!!lightAudioRef.current) {
+      // @ts-ignore
+      lightAudioRef.current.volume = 0.5;
+    }
+    if (!!nightAudioRef.current) {
+      // @ts-ignore
+      nightAudioRef.current.volume = 0.5;
+    }
+  }, [lightAudioRef, nightAudioRef]);
+
   useEffect(() => {
-    if (darkMode === true && ambience === true) {
+    cameraControlRef.current?.rotatePolarTo(0);
+    cameraControlRef.current?.rotateAzimuthTo(0);
+    cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+    if (darkMode === true && ambience === true && threeLoading === true) {
       setDarkModeAnim(Number(!darkModeAnim));
-      cameraControlRef.current?.rotatePolarTo(0);
-      cameraControlRef.current?.rotateAzimuthTo(0);
-      // cameraControlRef.current?.setPosition(-10, 30, -10);
-      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28, true);
+
       // @ts-ignore
       nightAudioRef.current?.play();
       // @ts-ignore
       lightAudioRef.current?.pause();
-    } else if (darkMode === false && ambience === true) {
+      setColor("#232737");
+    } else if (
+      darkMode === false &&
+      ambience === true &&
+      threeLoading === true
+    ) {
       setDarkModeAnim(0);
-      cameraControlRef.current?.rotatePolarTo(0);
-      cameraControlRef.current?.rotateAzimuthTo(0);
-      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+      // cameraControlRef.current?.rotatePolarTo(0);
+      // cameraControlRef.current?.rotateAzimuthTo(0);
+      // cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
       // @ts-ignore
       lightAudioRef.current?.play();
       // @ts-ignore
       nightAudioRef.current?.pause();
-    } else if (ambience === false) {
-      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+      setColor("#F3F3F3");
+    } else if (darkMode === true && ambience === false) {
+      // cameraControlRef.current?.rotatePolarTo(0);
+      // cameraControlRef.current?.rotateAzimuthTo(0);
+      // cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
       // @ts-ignore
       lightAudioRef.current?.pause();
       // @ts-ignore
       nightAudioRef.current?.pause();
+      setColor("#000000");
+    } else {
+      console.log("!");
+      // cameraControlRef.current?.rotatePolarTo(0);
+      // cameraControlRef.current?.rotateAzimuthTo(0);
+      // cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+      // @ts-ignore
+      lightAudioRef.current?.pause();
+      // @ts-ignore
+      nightAudioRef.current?.pause();
+      setColor("#ffffff");
     }
-  }, [darkMode, ambience]);
+  }, [darkMode, ambience, threeLoading]);
 
   const { spring } = useSpring({
     spring: darkModeAnim,
-    config: { mass: 5, tension: 400, friction: 100, precision: 0.0001 },
+    config: { mass: 5, tension: 400, friction: 200, precision: 0.0001 },
   });
 
-  const rotation_x = spring.to([0, 1], [0, Math.PI * 2]);
+  const rotation_x = spring.to([0, 1], [0, Math.PI]);
   const rotation_y = spring.to([0, 1], [Math.PI * 0.1, Math.PI * 0.14]);
 
   return (
@@ -230,7 +261,7 @@ export default function Home() {
       style={{
         width: "100vw",
         height: "100%",
-        background: darkMode === false ? "white" : "#232737",
+        background: color,
         color: darkMode === false ? "black" : "white",
       }}
     >
@@ -248,14 +279,15 @@ export default function Home() {
           pointerEvents: "none",
         }}
         animate={{
-          opacity: ambience === true ? 1 : 0,
-          display: ambience === true ? "block" : "none",
+          opacity: ambience === true && threeLoading === true ? 1 : 0,
+          // display: ambience === true ? "block" : "none",
         }}
       >
         <Canvas
           shadows
           camera={{
             fov: 45,
+            position: [-20, 20, -30],
           }}
           style={{
             pointerEvents: "none",
@@ -266,6 +298,9 @@ export default function Home() {
             left: 0,
             zIndex: 2,
           }}
+          onCreated={() => {
+            setThreeLoading(true);
+          }}
         >
           <CameraControls ref={cameraControlRef} makeDefault={true} />
 
@@ -275,7 +310,8 @@ export default function Home() {
           <ambientLight intensity={1} color="blue" />
           {/* @ts-ignore */}
           <a.group
-            rotation-x={rotation_x}
+            rotation-z={rotation_x}
+            // rotation-x={rotation_x}
             rotation-y={rotation_y}
             // ref={lightGroup}
             // rotation={
@@ -291,7 +327,7 @@ export default function Home() {
             >
               <orthographicCamera
                 attach="shadow-camera"
-                args={[-30, 30, -30, 50, 0.5, 80]}
+                args={[-30, 30, -30, 100, 0.5, 80]}
               />
             </directionalLight>
             <directionalLight
@@ -303,7 +339,7 @@ export default function Home() {
             >
               <orthographicCamera
                 attach="shadow-camera"
-                args={[-10, 10, -10, 50, 0.1, 50]}
+                args={[-10, 10, -10, 100, 0.5, 80]}
               />
             </directionalLight>
           </a.group>
@@ -330,7 +366,7 @@ export default function Home() {
             <Spheres position={[-6, 8, 3]} number={200} />
             <Plants position={[-6, 10, 3]} number={300} />
 
-            {window === true && <Window position={[0, 4, 3]} />}
+            {windowShadow === true && <Window position={[0, 4, 3]} />}
           </group>
           {/* <Perf position="top-left" /> */}
         </Canvas>
@@ -345,7 +381,9 @@ export default function Home() {
           mixBlendMode: "multiply",
           // transform: "rotate(90deg)",
         }}
-        animate={{ opacity: ambience === true ? 1 : 0 }}
+        animate={{
+          opacity: ambience === true && threeLoading === true ? 1 : 0,
+        }}
         transition={transition}
       >
         <Image
@@ -402,6 +440,7 @@ export default function Home() {
             onAmbienceClick={() => {
               setAmbience(!ambience);
             }}
+            color={color}
           />
           <div
             style={{
@@ -419,7 +458,8 @@ export default function Home() {
               Dark and Light mode, <br /> reimagined
             </h1>
             <h2 style={{ fontSize: 24, opacity: 0.4 }}>
-              Bringing the ambience to web
+              Bringing the ambience into our screen
+              <br /> <br />
             </h2>
 
             <div
@@ -440,7 +480,17 @@ export default function Home() {
               }}
               className={ibm.className}
             >
-              <h3 style={{ fontSize: 12, cursor: "pointer" }}>Share</h3>
+              <motion.h3
+                style={{ fontSize: 12, cursor: "pointer", opacity: 0.4 }}
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    "https://ambient-reader.vercel.app"
+                  );
+                }}
+                whileHover={{ opacity: 1 }}
+              >
+                Copy URL
+              </motion.h3>
 
               <div
                 style={{
@@ -452,29 +502,69 @@ export default function Home() {
                   alignItems: "center",
                 }}
               >
-                <h3 style={{ fontSize: 12 }}>Created by Seungmee Lee</h3>
+                <h3 style={{ fontSize: 12, opacity: 0.4 }}>
+                  Created by Seungmee Lee
+                </h3>
 
-                <Globe
-                  color={darkMode === true ? "white" : "black"}
-                  weight="bold"
-                  size={iconSize}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {}}
-                />
-                <InstagramLogo
-                  color={darkMode === true ? "white" : "black"}
-                  weight="bold"
-                  size={iconSize}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {}}
-                />
-                <TwitterLogo
-                  color={darkMode === true ? "white" : "black"}
-                  weight="bold"
-                  size={iconSize}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {}}
-                />
+                <motion.div
+                  style={{ opacity: 0.4 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <Globe
+                    color={darkMode === true ? "white" : "black"}
+                    weight="bold"
+                    size={iconSize}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      window.open("https://seungmee-lee.com", "_blank");
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  style={{ opacity: 0.4 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <Note
+                    color={darkMode === true ? "white" : "black"}
+                    weight="bold"
+                    size={iconSize}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      window.open("https://posts.cv/seungmee_lee", "_blank");
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  style={{ opacity: 0.4 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <InstagramLogo
+                    color={darkMode === true ? "white" : "black"}
+                    weight="bold"
+                    size={iconSize}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      window.open(
+                        "https://instagram.com/@stone.skipper",
+                        "_blank"
+                      );
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  style={{ opacity: 0.4 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <TwitterLogo
+                    color={darkMode === true ? "white" : "black"}
+                    weight="bold"
+                    size={iconSize}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      window.open("https://twitter.com/@smee_leee", "_blank");
+                    }}
+                  />
+                </motion.div>
               </div>
             </div>
 
@@ -492,14 +582,13 @@ export default function Home() {
             
             When I want to stay away from phones and works, I grab a light paper book that I borrowed from a library, and go out. Sometimes I go to a park nearby, and find an empty chair under trees, or go to a beach bed near a swimming pool. 
             
-            This prototype was also inspired when I was out for quick reading outside. When I was enjoying the moment, I started to imagine if I can bring this nice ambience to somewhere I use more frequently - to screens and website. 
+            This prototype was also inspired when I was out for quick reading outside. When I was enjoying the moment, I started to imagine bringing this nice ambience to somewhere I spend time more often - to screens and website. 
 
             How does it feel for you to have this ambience? Do you think it's going to help you feel better when you're reading boring articles or documents on a screen? 
 
             When we build something, it's always about the priority. We focus on MVP, minimal viable product, and designers focus on user experience but mostly about usability, readability, accessibility and many more to ensure it's usable for most of users. These are 'must-to-have'
 
-            But this prototype made me question to myself, whether there's a room for 'nice-to-have', things that make users feel great, but something that can't be measured. 
-            
+            But this prototype made me question to myself, whether there's a room for these type of 'nice-to-have', things that make users... just feel good. Especially as building an app or website getting easier and more dynamic with different librarys like THREE.js, shaders, and many more, I feel like we're at a good phase to experiment and build these niche interactions and products. It might not be highly profitable or appropriate for large audience, but there'll be niche users who appreciate for these little nice touches.
             `}
               {/* We, as a designer, think lots about a good user experience and how to achieve it. We consider the experience in many different angles - from usability, readability, affordance, accessibility, sustainability... and many more. These are critical ones to ensure what we design succeeds to achive practical value. These are 'must-to-have'.
 
