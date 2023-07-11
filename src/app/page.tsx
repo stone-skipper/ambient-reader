@@ -1,8 +1,7 @@
 "use client"; // This is a client component 👈🏽
 
-import Image from "next/image";
 import { useRef, useMemo, useState, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { SoftShadows, CameraControls } from "@react-three/drei";
 // import { useControls } from "leva";
 import { useSpring } from "@react-spring/core";
@@ -371,7 +370,7 @@ export default function Home() {
           {/* <Perf position="top-left" /> */}
         </Canvas>
       </motion.div>
-      <motion.div
+      {/* <motion.div
         style={{
           width: "100vw",
           height: "100vh",
@@ -392,7 +391,7 @@ export default function Home() {
           fill={true}
           objectFit="cover"
         />
-      </motion.div>
+      </motion.div> */}
 
       <div
         style={{
