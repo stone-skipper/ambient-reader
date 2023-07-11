@@ -1,8 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Libre_Baskerville } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Libre_Baskerville({ subsets: ["latin"], weight: ["400", "700"] });
+const ibm = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "Poetic Light & Dark mode reader",

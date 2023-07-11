@@ -4,10 +4,18 @@ import Image from "next/image";
 import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { SoftShadows, CameraControls } from "@react-three/drei";
-import { useControls } from "leva";
+// import { useControls } from "leva";
 import { useSpring } from "@react-spring/core";
 import { a } from "@react-spring/three";
 import { motion } from "framer-motion";
+import Toolbar from "../component/toolbar";
+import Contact from "../component/contact";
+import { IBM_Plex_Mono } from "next/font/google";
+import { InstagramLogo, TwitterLogo, Globe } from "phosphor-react";
+
+const ibm = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "700"] });
+
+let iconSize = 14;
 
 const easeInOutCubic = (t: any) =>
   t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
@@ -47,7 +55,7 @@ function Plant({ position = [0, 0, 0], ...props }) {
   });
   return (
     <mesh ref={ref} position={position} {...props} castShadow receiveShadow>
-      <sphereGeometry args={[5, 6, 6, 0.1, 0.1, 0.1, 1]} />
+      <sphereGeometry args={[7, 6, 6, 0.1, 0.1, 0.1, 1]} />
       <meshLambertMaterial color="white" roughness={0} metalness={0.1} />
     </mesh>
   );
@@ -100,7 +108,7 @@ function Spheres({ number = 20, position = [0, 0, 0] }) {
 function Plants({ number = 20, position = [0, 0, 0] }) {
   const ref = useRef();
   const positions = useMemo(
-    () => [...new Array(number)].map((info, index) => [0, index * 0.1, 0]),
+    () => [...new Array(number)].map((info, index) => [0, index * 0.01, 0]),
     []
   );
   const rotations = useMemo(
@@ -159,192 +167,347 @@ function Window({ xPillar = 4, yPillar = 4, position = [0, 0, 0] }) {
     </group>
   );
 }
-
+const transition = { duration: 0.7 };
 export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [darkModeAnim, setDarkModeAnim] = useState(0);
-  const [ambience, setAmbience] = useState(true);
-  const [window, setWindow] = useState(true);
-  const { enabled, ...config } = useControls({
-    enabled: true,
-    size: { value: 25, min: 0, max: 100 },
-    focus: { value: 0.6, min: 0, max: 2 },
-    samples: { value: 10, min: 1, max: 20, step: 1 },
-  });
+  const [ambience, setAmbience] = useState(false);
+  const [window, setWindow] = useState(false);
+  // const { enabled, ...config } = useControls({
+  //   enabled: true,
+  //   size: { value: 25, min: 0, max: 100 },
+  //   focus: { value: 0.6, min: 0, max: 2 },
+  //   samples: { value: 10, min: 1, max: 20, step: 1 },
+  // });
   const cameraControlRef = useRef<CameraControls | null>(null);
+  const lightAudioRef = useRef(null);
+  const nightAudioRef = useRef(null);
 
   useEffect(() => {
-    if (darkMode === true) {
+    setTimeout(() => {
+      setAmbience(true);
+    }, 4000);
+  }, []);
+  useEffect(() => {
+    if (darkMode === true && ambience === true) {
       setDarkModeAnim(Number(!darkModeAnim));
-    } else {
+      cameraControlRef.current?.rotatePolarTo(0);
+      cameraControlRef.current?.rotateAzimuthTo(0);
+      // cameraControlRef.current?.setPosition(-10, 30, -10);
+      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28, true);
+      // @ts-ignore
+      nightAudioRef.current?.play();
+      // @ts-ignore
+      lightAudioRef.current?.pause();
+    } else if (darkMode === false && ambience === true) {
       setDarkModeAnim(0);
+      cameraControlRef.current?.rotatePolarTo(0);
+      cameraControlRef.current?.rotateAzimuthTo(0);
+      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+      // @ts-ignore
+      lightAudioRef.current?.play();
+      // @ts-ignore
+      nightAudioRef.current?.pause();
+    } else if (ambience === false) {
+      cameraControlRef.current?.setLookAt(-20, 20, -30, -8, -10, -28);
+      // @ts-ignore
+      lightAudioRef.current?.pause();
+      // @ts-ignore
+      nightAudioRef.current?.pause();
     }
-  }, [darkMode]);
+  }, [darkMode, ambience]);
 
   const { spring } = useSpring({
     spring: darkModeAnim,
-    config: { mass: 5, tension: 400, friction: 50, precision: 0.0001 },
+    config: { mass: 5, tension: 400, friction: 100, precision: 0.0001 },
   });
 
   const rotation_x = spring.to([0, 1], [0, Math.PI * 2]);
-  const rotation_y = spring.to([0, 1], [Math.PI * 0.1, Math.PI * -0.1]);
+  const rotation_y = spring.to([0, 1], [Math.PI * 0.1, Math.PI * 0.14]);
 
-  // useThree(({ camera }) => {
-  //   camera.rotation.set(deg2rad(30), 0, 0);
-  //   camera.position.set(-10, 30, 10);
-  // });
   return (
     <div
       style={{
         width: "100vw",
-        height: "100vh",
-        background: darkMode === false ? "white" : "#19213D",
+        height: "100%",
+        background: darkMode === false ? "white" : "#232737",
         color: darkMode === false ? "black" : "white",
       }}
     >
-      {ambience === true && (
-        <div
-          style={{
-            width: "100vw",
-            height: "100vh",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            mixBlendMode: "multiply",
-            // transform: "rotate(90deg)",
-          }}
-        >
-          <Image
-            src="https://img.freepik.com/free-photo/paper-texture_1194-6010.jpg"
-            alt="texture"
-            fill={true}
-            objectFit="cover"
-          />
-        </div>
-      )}
-      <div
-        style={{
-          width: "100%",
-          overflow: "scroll",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            paddingTop: "20vh",
-            width: "50%",
-            display: "flex",
-            gap: 20,
-            // background: "rgba(0,0,0,0.1)",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            onClick={() => {
-              setDarkMode(!darkMode);
-            }}
-            style={{ position: "fixed", zIndex: 10, top: 0, left: 0 }}
-          >
-            toggle darkmode
-          </div>
-          <div
-            onClick={() => {
-              setAmbience(!ambience);
-            }}
-            style={{ position: "fixed", zIndex: 10, top: 30, left: 0 }}
-          >
-            toggle ambience
-          </div>
-          {cameraControlRef.current?.getPosition(true)}
+      <Contact darkMode={darkMode} />
 
-          <h1>Ambient Reader</h1>
-          <h2>What if we bring the natural lights from a weekend blah blah</h2>
-          <p>
-            This is inspired on a bright sunny day in Singapore. <br />
-            No one likes to read{" "}
-          </p>
-        </div>
-      </div>
-
-      <Canvas
-        shadows
-        camera={{
-          position: [-10, 30, 10],
-          fov: 45,
-          rotation: [30, 0, 30],
-        }}
+      <motion.div
         style={{
           width: "100vw",
           height: "100vh",
           position: "fixed",
           top: 0,
           left: 0,
-          opacity: ambience === true ? 1 : 0,
+          zIndex: 2,
           mixBlendMode: "multiply",
+          pointerEvents: "none",
+        }}
+        animate={{
+          opacity: ambience === true ? 1 : 0,
+          display: ambience === true ? "block" : "none",
         }}
       >
-        <CameraControls ref={cameraControlRef} />
-
-        {enabled && <SoftShadows {...config} />}
-        <fog attach="fog" args={["black", 0, 40]} />
-        <ambientLight intensity={1} color="blue" />
-        {/* @ts-ignore */}
-        <a.group
-          rotation-x={rotation_x}
-          rotation-y={rotation_y}
-          // ref={lightGroup}
-          // rotation={
-          //   darkMode === true ? [0, Math.PI / 2, Math.PI / 3] : [0, 0, 0]
-          // }
+        <Canvas
+          shadows
+          camera={{
+            fov: 45,
+          }}
+          style={{
+            pointerEvents: "none",
+            width: "100vw",
+            height: "100vh",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            zIndex: 2,
+          }}
         >
-          <directionalLight
-            castShadow
-            position={[2.5, 10, 20]}
-            intensity={3}
-            shadow-mapSize={1024}
-            color="yellow"
+          <CameraControls ref={cameraControlRef} makeDefault={true} />
+
+          <SoftShadows size={25} focus={0.6} samples={10} />
+
+          <fog attach="fog" args={["black", 0, 40]} />
+          <ambientLight intensity={1} color="blue" />
+          {/* @ts-ignore */}
+          <a.group
+            rotation-x={rotation_x}
+            rotation-y={rotation_y}
+            // ref={lightGroup}
+            // rotation={
+            //   darkMode === true ? [0, Math.PI / 2, Math.PI / 3] : [0, 0, 0]
+            // }
           >
-            <orthographicCamera
-              attach="shadow-camera"
-              args={[-30, 30, -30, 50, 0.5, 80]}
-            />
-          </directionalLight>
-          <directionalLight
-            castShadow
-            position={[-2.5, -10, 20]}
-            intensity={2}
-            shadow-mapSize={1024}
-            color="yellow"
-          >
-            <orthographicCamera
-              attach="shadow-camera"
-              args={[-10, 10, -10, 50, 0.1, 50]}
-            />
-          </directionalLight>
-        </a.group>
-        <pointLight position={[-10, 0, -20]} color={"white"} intensity={1} />
-        <pointLight position={[0, -10, 0]} intensity={1} />
-        <group position={[0, -3.5, 0]}>
-          {/* <mesh receiveShadow castShadow>
+            <directionalLight
+              castShadow
+              position={[2.5, 10, 20]}
+              intensity={3}
+              shadow-mapSize={1024}
+              color="yellow"
+            >
+              <orthographicCamera
+                attach="shadow-camera"
+                args={[-30, 30, -30, 50, 0.5, 80]}
+              />
+            </directionalLight>
+            <directionalLight
+              castShadow
+              position={[-2.5, -10, 20]}
+              intensity={6}
+              shadow-mapSize={1024}
+              color="yellow"
+            >
+              <orthographicCamera
+                attach="shadow-camera"
+                args={[-10, 10, -10, 50, 0.1, 50]}
+              />
+            </directionalLight>
+          </a.group>
+          <pointLight position={[-10, 0, -20]} color={"white"} intensity={1} />
+          <pointLight position={[0, -10, 0]} intensity={1} />
+          <group position={[0, -3.5, 0]}>
+            {/* <mesh receiveShadow castShadow>
               <boxGeometry args={[4, 1, 1]} />
               <meshLambertMaterial />
             </mesh> */}
-          <mesh
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[0, -0.5, 0]}
-            receiveShadow
-          >
-            <planeGeometry args={[1000, 1000]} />
-            <shadowMaterial transparent opacity={0.4} />
-          </mesh>
-          <Spheres position={[5, 10, 8]} number={200} />
-          <Plants position={[5, 10, 8]} number={100} />
+            <mesh
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[0, -0.5, 0]}
+              receiveShadow
+            >
+              <planeGeometry args={[1000, 1000]} />
+              <shadowMaterial
+                transparent
+                opacity={darkMode === true ? 1 : 0.4}
+              />
+            </mesh>
+            <Spheres position={[5, 10, 8]} number={200} />
+            <Plants position={[5, 11, 8]} number={300} />
+            <Spheres position={[-6, 8, 3]} number={200} />
+            <Plants position={[-6, 10, 3]} number={300} />
 
-          {window === true && <Window position={[0, 4, 3]} />}
-        </group>
-        {/* <Perf position="top-left" /> */}
-      </Canvas>
+            {window === true && <Window position={[0, 4, 3]} />}
+          </group>
+          {/* <Perf position="top-left" /> */}
+        </Canvas>
+      </motion.div>
+      <motion.div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          mixBlendMode: "multiply",
+          // transform: "rotate(90deg)",
+        }}
+        animate={{ opacity: ambience === true ? 1 : 0 }}
+        transition={transition}
+      >
+        <Image
+          src="https://img.freepik.com/free-photo/paper-texture_1194-6010.jpg"
+          alt="texture"
+          fill={true}
+          objectFit="cover"
+        />
+      </motion.div>
+
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            paddingTop: "15vh",
+            width: "50%",
+            display: "flex",
+            gap: 20,
+            // background: "rgba(0,0,0,0.1)",
+            flexDirection: "column",
+            position: "relative",
+          }}
+        >
+          <div style={{ position: "fixed", zIndex: 100, top: 20, left: 0 }}>
+            <audio
+              controls
+              ref={lightAudioRef}
+              style={{ opacity: 0, pointerEvents: "none" }}
+              loop={true}
+            >
+              <source src="whitenoise.mp3" type="audio/mpeg" />
+            </audio>
+            <audio
+              controls
+              ref={nightAudioRef}
+              style={{ opacity: 0, pointerEvents: "none" }}
+              loop={true}
+            >
+              <source src="nightnoise.mp3" type="audio/mpeg" />
+            </audio>
+          </div>
+          <Toolbar
+            onClick={() => {
+              setDarkMode(!darkMode);
+            }}
+            left={darkMode}
+            darkMode={darkMode}
+            ambience={ambience}
+            onAmbienceClick={() => {
+              setAmbience(!ambience);
+            }}
+          />
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              gap: 20,
+              // background: "rgba(0,0,0,0.1)",
+              flexDirection: "column",
+              position: "relative",
+              overflow: "scroll",
+              height: "100%",
+            }}
+          >
+            <h1 style={{ fontSize: 48 }}>
+              Dark and Light mode, <br /> reimagined
+            </h1>
+            <h2 style={{ fontSize: 24, opacity: 0.4 }}>
+              Bringing the ambience to web
+            </h2>
+
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                height: "fit-content",
+                padding: "20px 0",
+                borderTop:
+                  darkMode === true
+                    ? "1px solid rgba(255,255,255,0.1)"
+                    : "1px solid rgba(0,0,0,0.1)",
+                borderBottom:
+                  darkMode === true
+                    ? "1px solid rgba(255,255,255,0.1)"
+                    : "1px solid rgba(0,0,0,0.1)",
+              }}
+              className={ibm.className}
+            >
+              <h3 style={{ fontSize: 12, cursor: "pointer" }}>Share</h3>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 10,
+                  width: "fit-content",
+                  height: "fit-content",
+                  alignItems: "center",
+                }}
+              >
+                <h3 style={{ fontSize: 12 }}>Created by Seungmee Lee</h3>
+
+                <Globe
+                  color={darkMode === true ? "white" : "black"}
+                  weight="bold"
+                  size={iconSize}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {}}
+                />
+                <InstagramLogo
+                  color={darkMode === true ? "white" : "black"}
+                  weight="bold"
+                  size={iconSize}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {}}
+                />
+                <TwitterLogo
+                  color={darkMode === true ? "white" : "black"}
+                  weight="bold"
+                  size={iconSize}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {}}
+                />
+              </div>
+            </div>
+
+            <p
+              style={{
+                paddingTop: 30,
+                lineHeight: 1.8,
+                whiteSpace: "pre-line",
+                paddingBottom: "20vh",
+              }}
+            >
+              {`This is a quick prototype of an idea, inspired by a bright sunny weekend in Singapore.
+            
+            Since I've relocated to Singapore, I've learned the beauty of spending my time outside, for walks, reading, or just to listen to a music without doing anything. You might wonder if it's hot outside, but actually, with a nice breeze under the shades of trees, and sometimes sounds of water from pools nearby, it's a perfect weather to chill.
+            
+            When I want to stay away from phones and works, I grab a light paper book that I borrowed from a library, and go out. Sometimes I go to a park nearby, and find an empty chair under trees, or go to a beach bed near a swimming pool. 
+            
+            This prototype was also inspired when I was out for quick reading outside. When I was enjoying the moment, I started to imagine if I can bring this nice ambience to somewhere I use more frequently - to screens and website. 
+
+            How does it feel for you to have this ambience? Do you think it's going to help you feel better when you're reading boring articles or documents on a screen? 
+
+            When we build something, it's always about the priority. We focus on MVP, minimal viable product, and designers focus on user experience but mostly about usability, readability, accessibility and many more to ensure it's usable for most of users. These are 'must-to-have'
+
+            But this prototype made me question to myself, whether there's a room for 'nice-to-have', things that make users feel great, but something that can't be measured. 
+            
+            `}
+              {/* We, as a designer, think lots about a good user experience and how to achieve it. We consider the experience in many different angles - from usability, readability, affordance, accessibility, sustainability... and many more. These are critical ones to ensure what we design succeeds to achive practical value. These are 'must-to-have'.
+
+But there're lots of 'nice-to-have' that  */}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
