@@ -60,16 +60,6 @@ export default function Toolbar({
           setHover(false);
         }}
       >
-        {/* <motion.input
-      placeholder="paste a link to Medium article"
-      style={{
-        background: "transparent",
-        width: "100%",
-        paddingLeft: 20,
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: hover === true ? 1 : 0 }}
-    ></motion.input> */}
         <motion.p
           style={{ paddingLeft: 15, cursor: "pointer", opacity: 0.4 }}
           onClick={onAmbienceClick}

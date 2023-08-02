@@ -5,6 +5,7 @@ export default function Toggle({ left = true, onClick, darkMode = true }) {
   let iconSize = 18;
   let circleSize = 20;
   let paddingBetwenCircle = 4;
+
   return (
     <div
       style={{
@@ -13,6 +14,7 @@ export default function Toggle({ left = true, onClick, darkMode = true }) {
         gap: 10,
         justifyContent: "center",
         alignItems: "center",
+        cursor: "pointer",
       }}
     >
       <Sun
